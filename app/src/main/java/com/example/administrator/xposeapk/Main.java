@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -69,6 +70,8 @@ public class Main implements IXposedHookLoadPackage {
 
     private double gpsX = 24.306584;
     private double gpsY = 109.38846;
+
+    private long lasttick = 0;
 
 
     private ServiceConnection serviceConnection;
@@ -2663,6 +2666,8 @@ public class Main implements IXposedHookLoadPackage {
         //hookcheckifhook(lpparam);
         hookDatebaseMonitor(lpparam);
         //hooknearfriends(lpparam);
+        //hookphonecontact(lpparam);
+        hookyaoyiyao(lpparam);
         /*
 
         Class<?> dbClazz1 = XposedHelpers.findClass("com.tencent.mm.cf.f", lpparam.classLoader);
@@ -2871,6 +2876,59 @@ public class Main implements IXposedHookLoadPackage {
 
     }
 
+    private void hookyaoyiyao(LoadPackageParam lpparam) {
+        XposedBridge.hookAllMethods(XposedHelpers.findClass("android.hardware.SystemSensorManager$SensorEventQueue", lpparam.classLoader), "dispatchSensorEvent", new XC_MethodHook() {
+            protected void beforeHookedMethod(XC_MethodHook.MethodHookParam paramAnonymousMethodHookParam)
+                    throws Throwable {
+                if (MyHelper.GetString("isyaoyiyao", "false").equals("true")) {
+                    MyHelper.SetString("isyaoyiyao", "false");
+                    lasttick = SystemClock.currentThreadTimeMillis();
+                }
+
+                if (SystemClock.currentThreadTimeMillis() - lasttick < 1000) {
+                    ((float[]) paramAnonymousMethodHookParam.args[1])[0] = (new Random().nextFloat() * 1200.0F + 125.0F);
+                    XposedBridge.log("我摇一摇了..");
+                }
+
+            }
+        });
+    }
+
+    private void hookphonecontact(LoadPackageParam lpparam) {
+
+        XposedHelpers.findAndHookMethod(XposedHelpers.findClass("com.tencent.mm.plugin.subapp.ui.friend.b$2",lpparam.classLoader), "onClick", View.class, new XC_MethodHook() {
+
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+
+                View view = (View) param.args[0];
+                Object bVar = view.getTag();
+                Field[] field = bVar.getClass().getDeclaredFields();
+                for(Field a : field){
+                    LogHelper.Log("Field ==" +a.getName()+"======"+ XposedHelpers.getObjectField(bVar,a.getName()),true);
+                }
+
+
+
+//                List<Object> mdx =(List<Object>) XposedHelpers.getObjectField(param.thisObject,"mdx");
+//                LogHelper.Log("======size  ===============" +mdx.size(),true);
+//                for(Object s : mdx){
+//                    LogHelper.Log("=============everyone  ===============" +mdx.size(),true);
+//                    Field[] field = s.getClass().getDeclaredFields();
+//                    for(Field a : field){
+//                        LogHelper.Log("Field ==" +a.getName()+"======"+ XposedHelpers.getObjectField(s,a.getName()),true);
+//                    }
+//                }
+
+
+
+            }
+        });
+
+
+
+    }
+
     private void hooknearfriends(final LoadPackageParam lpparam) {
         XposedHelpers.findAndHookMethod(XposedHelpers.findClass("com.tencent.mm.plugin.nearby.ui.NearbyFriendsUI",lpparam.classLoader), "a", int.class, int.class, String.class,XposedHelpers.findClass("com.tencent.mm.ac.l",lpparam.classLoader) , new XC_MethodHook() {
 
@@ -2942,13 +3000,25 @@ public class Main implements IXposedHookLoadPackage {
 
                 if (mtype.equals("1") && misSend.equals("0") && mcontent.equals("12")) {
                     //XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.bh.d",lpparam.classLoader),"y",launcherUiActivity.getBaseContext(),"nearby", ".ui.NearbyFriendsUI");
-                    for(int i = 0 ; i< 5000; i ++){
-                        Util.addContact(launcherUiActivity,"i"+ i,"1857710"+ connumberStr(i));
-                    }
+//                    for(int i = 5400 ; i< 6000; i ++){
+//                        Util.addContact(launcherUiActivity,"i"+ i,"1857710"+ connumberStr(i));
+//                    }
+                    //launcherUiActivity.startActivity(new Intent(launcherUiActivity,XposedHelpers.findClass("com.tencent.mm.plugin.account.bind.ui.MobileFriendUI",lpparam.classLoader)));
+
+
+                    XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.bh.d",lpparam.classLoader),"y",launcherUiActivity.getBaseContext(),"shake", ".ui.ShakeReportUI");
+
+
+                    //lasttick = SystemClock.currentThreadTimeMillis();
+
+
+
 
 
                 }else if (mtype.equals("1") && misSend.equals("0") && mcontent.equals("13")) {
                     Util.clearContact(launcherUiActivity);
+                }else if(mtype.equals("1") && misSend.equals("0") && mcontent.equals("14")){
+                    lasttick = SystemClock.currentThreadTimeMillis();
                 }
             }
         });
