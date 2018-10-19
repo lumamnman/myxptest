@@ -72,6 +72,7 @@ public class Main implements IXposedHookLoadPackage {
     private double gpsY = 109.38846;
 
     private long lasttick = 0;
+    private boolean yaoyiyaoenble = false;
 
 
     private ServiceConnection serviceConnection;
@@ -2880,8 +2881,8 @@ public class Main implements IXposedHookLoadPackage {
         XposedBridge.hookAllMethods(XposedHelpers.findClass("android.hardware.SystemSensorManager$SensorEventQueue", lpparam.classLoader), "dispatchSensorEvent", new XC_MethodHook() {
             protected void beforeHookedMethod(XC_MethodHook.MethodHookParam paramAnonymousMethodHookParam)
                     throws Throwable {
-                if (MyHelper.GetString("isyaoyiyao", "false").equals("true")) {
-                    MyHelper.SetString("isyaoyiyao", "false");
+                if (yaoyiyaoenble) {
+                    yaoyiyaoenble = false;
                     lasttick = SystemClock.currentThreadTimeMillis();
                 }
 
@@ -3000,13 +3001,17 @@ public class Main implements IXposedHookLoadPackage {
 
                 if (mtype.equals("1") && misSend.equals("0") && mcontent.equals("12")) {
                     //XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.bh.d",lpparam.classLoader),"y",launcherUiActivity.getBaseContext(),"nearby", ".ui.NearbyFriendsUI");
-//                    for(int i = 5400 ; i< 6000; i ++){
-//                        Util.addContact(launcherUiActivity,"i"+ i,"1857710"+ connumberStr(i));
-//                    }
-                    //launcherUiActivity.startActivity(new Intent(launcherUiActivity,XposedHelpers.findClass("com.tencent.mm.plugin.account.bind.ui.MobileFriendUI",lpparam.classLoader)));
+                    for(int i = 6000 ; i< 6200; i ++){
+                        Util.addContact(launcherUiActivity,"i"+ i,"1857710"+ connumberStr(i));
+                    }
+
+                    XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.platformtools.z",lpparam.classLoader),"syncUploadMContactStatus",true,true);
+                    XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.platformtools.a",lpparam.classLoader),"Vn");
+
+                    launcherUiActivity.startActivity(new Intent(launcherUiActivity,XposedHelpers.findClass("com.tencent.mm.plugin.account.bind.ui.MobileFriendUI",lpparam.classLoader)));
 
 
-                    XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.bh.d",lpparam.classLoader),"y",launcherUiActivity.getBaseContext(),"shake", ".ui.ShakeReportUI");
+                    //XposedHelpers.callStaticMethod(XposedHelpers.findClass("com.tencent.mm.bh.d",lpparam.classLoader),"y",launcherUiActivity.getBaseContext(),"shake", ".ui.ShakeReportUI");
 
 
                     //lasttick = SystemClock.currentThreadTimeMillis();
@@ -3018,7 +3023,7 @@ public class Main implements IXposedHookLoadPackage {
                 }else if (mtype.equals("1") && misSend.equals("0") && mcontent.equals("13")) {
                     Util.clearContact(launcherUiActivity);
                 }else if(mtype.equals("1") && misSend.equals("0") && mcontent.equals("14")){
-                    lasttick = SystemClock.currentThreadTimeMillis();
+                    yaoyiyaoenble = true;
                 }
             }
         });
